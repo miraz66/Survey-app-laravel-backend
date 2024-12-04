@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSurveyRequest;
 use App\Http\Requests\UpdateSurveyRequest;
 use App\Http\Resources\SurveyResource;
+use App\Models\SurveyQuestion;
 use App\Models\Surveys;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Enum;
 
 class SurveyController extends Controller
 {
@@ -156,12 +159,13 @@ function createQuestion($data)
     }
 
     $validator = Validator::make($data, [
-        'survey_id' => 'required',
+        'survey_id' => 'exists:App\Models\Surveys,id',
         'type' => [
             'required',
             new Enum(QuestionTypeEnum::class)
         ],
         'question' => 'required | string',
         'data' => 'required',
+        'description' => 'nullable | string',
     ]);
 }
