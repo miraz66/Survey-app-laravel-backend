@@ -168,4 +168,6 @@ function createQuestion($data)
         'data' => 'required',
         'description' => 'nullable | string',
     ]);
+
+    return SurveyQuestion::create($validator->validated());
 }
