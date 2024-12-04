@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateSurveyRequest;
 use App\Http\Resources\SurveyResource;
 use App\Models\Surveys;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class SurveyController extends Controller
 {
@@ -45,6 +47,7 @@ class SurveyController extends Controller
         //     $image->move(public_path('images'), $imageName);
         //     $data['image'] = $imageName;
         // }
+
 
         if (isset($data['image'])) {
             $relativePath = $this->saveImage($data['image']);
@@ -92,4 +95,73 @@ class SurveyController extends Controller
     {
         //
     }
+}
+
+
+/**
+ * Create a question and return
+ *
+ * @param $data
+ * @return mixed
+ * @throws \Illuminate\Validation\ValidationException
+ * @author Firstname Lastname <bM7o4@example.com>
+ */
+function saveImage($image)
+{
+    // Chick if image is valid base64 string
+    if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
+        // Take out the base64 encoded text without mime information type
+        $image = substr($image, strpos($image, ',') + 1);
+        // Get file extension
+        $type = strtolower($type[1]); // jpg, png, gif
+        // Check if file is an image
+        if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
+            throw new \Exception('invalid image type');
+        }
+        $image = str_replace(' ', '+', $image);
+        $image = base64_decode($image);
+        if ($image === false) {
+            throw new \Exception('base64_decode failed');
+        }
+    } else {
+        throw new \Exception('did not match data URI with image data');
+    }
+
+    $dir = 'images/';
+    $file = Str::random(20) . '.' . $type;
+    $absolutePath = public_path($dir);
+    $relativePath = $dir . $file;
+    if (!File::exists($absolutePath)) {
+        File::makeDirectory($absolutePath, 0755, true);
+    }
+
+    // Save the image
+    file($relativePath, $image);
+
+    return $relativePath;
+}
+
+/**
+ * Create a question and return
+ *
+ * @param $data
+ * @return mixed
+ * @throws \Illuminate\Validation\ValidationException
+ * @author Firstname Lastname <bM7o4@example.com>
+ */
+function createQuestion($data)
+{
+    if (is_array($data['data'])) {
+        $data['data'] = json_encode($data['data']);
+    }
+
+    $validator = Validator::make($data, [
+        'survey_id' => 'required',
+        'type' => [
+            'required',
+            new Enum(QuestionTypeEnum::class)
+        ],
+        'question' => 'required | string',
+        'data' => 'required',
+    ]);
 }
