@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Enum\QuestionTypeEnum;
 use App\Http\Requests\StoreSurveyRequest;
 use App\Http\Requests\UpdateSurveyRequest;
 use App\Http\Resources\SurveyResource;
@@ -28,15 +29,6 @@ class SurveyController extends Controller
 
     return SurveyResource::collection($surveys);
   }
-
-  /**
-   * Show the form for creating a new resource.
-   */
-  public function create()
-  {
-    //
-  }
-
   /**
    * Store a newly created resource in storage.
    */
@@ -146,9 +138,24 @@ class SurveyController extends Controller
   /**
    * Remove the specified resource from storage.
    */
-  public function destroy(Surveys $survey)
+  public function destroy(Surveys $survey, Request $request)
   {
-    //
+    $user = $request->user();
+    if ($user->id !== $survey->user_id) {
+      return abort(403, 'Unauthorized action.');
+    } else {
+      $survey->delete();
+    }
+
+    // If there is a old image, delete it
+    if ($survey->image) {
+      $absolutePath = public_path($survey->image);
+      if (File::exists($absolutePath)) {
+        File::delete($absolutePath);
+      }
+
+      return response('', 204);
+    }
   }
 
   private function saveImage($image)
