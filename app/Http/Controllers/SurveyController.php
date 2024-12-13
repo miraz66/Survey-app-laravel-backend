@@ -44,7 +44,6 @@ class SurveyController extends Controller
     //     $data['image'] = $imageName;
     // }
 
-
     if (isset($data['image'])) {
       $relativePath = $this->saveImage($data['image']);
       $data['image'] = $relativePath;
