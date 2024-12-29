@@ -35,7 +35,6 @@ class SurveyController extends Controller
   public function store(StoreSurveyRequest $request)
   {
     $data = $request->validated();
-
     // image storage
     // if ($request->hasFile('image')) {
     //     $image = $request->file('image');
@@ -50,10 +49,11 @@ class SurveyController extends Controller
     }
     $survey = Surveys::create($data);
 
-    // Create a new questions
-    foreach ($data['questions'] as $question) {
-      $question['survey_id'] = $survey->id;
-      $this->createQuestion($question);
+    // Ensure questions is an array
+    if (isset($data['questions'])) {
+      foreach ($data['questions'] as $question) {
+        $this->createQuestion($question);
+      }
     }
 
     return new SurveyResource($survey);
