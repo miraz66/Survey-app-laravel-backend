@@ -35,13 +35,6 @@ class SurveyController extends Controller
   public function store(StoreSurveyRequest $request)
   {
     $data = $request->validated();
-    // image storage
-    // if ($request->hasFile('image')) {
-    //     $image = $request->file('image');
-    //     $imageName = time() . '.' . $image->getClientOriginalExtension();
-    //     $image->move(public_path('images'), $imageName);
-    //     $data['image'] = $imageName;
-    // }
 
     if (isset($data['image'])) {
       $relativePath = $this->saveImage($data['image']);
@@ -159,38 +152,38 @@ class SurveyController extends Controller
 
   private function saveImage($image)
   {
-    // Chick if image is valid base64 string
     if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
-      // Take out the base64 encoded text without mime information type
       $image = substr($image, strpos($image, ',') + 1);
-      // Get file extension
-      $type = strtolower($type[1]); // jpg, png, gif
-      // Check if file is an image
+      $type = strtolower($type[1]);
+
       if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
-        throw new \Exception('invalid image type');
+        throw new \Exception('Invalid image type');
       }
+
       $image = str_replace(' ', '+', $image);
       $image = base64_decode($image);
+
       if ($image === false) {
-        throw new \Exception('base64_decode failed');
+        throw new \Exception('Base64 decode failed');
       }
     } else {
-      throw new \Exception('did not match data URI with image data');
+      throw new \Exception('Invalid image data');
     }
 
     $dir = 'images/';
     $file = Str::random(20) . '.' . $type;
     $absolutePath = public_path($dir);
     $relativePath = $dir . $file;
+
     if (!File::exists($absolutePath)) {
       File::makeDirectory($absolutePath, 0755, true);
     }
 
-    // Save the image
-    file($relativePath, $image);
+    file_put_contents($absolutePath . $file, $image);
 
     return $relativePath;
   }
+
 
   private function createQuestion($data)
   {
